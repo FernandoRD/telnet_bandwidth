@@ -1,0 +1,121 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    - uuid: e6980e2fae5344c381ab338fc3771319
+      name: Templates/custom
+  templates:
+    - uuid: 8325909e4353485badb742d578e2a227
+      template: 'Template Telnet D-LINK Bandwidth'
+      name: 'Template Telnet D-LINK Bandwidth'
+      groups:
+        - name: Templates/custom
+      items:
+        - uuid: daf2e751da094ae5be90dc4c4c620597
+          name: 'Bandwidth Use - Download'
+          type: EXTERNAL
+          key: 'bandwidth.sh["{HOST.CONN}","{$USER}","{$PASSWORD}", "10","0"]'
+          delay: 2m
+          history: 7d
+          units: bps
+          tags:
+            - tag: Internet
+              value: Use
+        - uuid: 17cf8427b04449b18afe9dfa3bc6ccdb
+          name: 'Bandwidth Use - Upload'
+          type: EXTERNAL
+          key: 'bandwidth.sh["{HOST.CONN}","{$USER}","{$PASSWORD}", "10","1"]'
+          delay: 2m
+          history: 7d
+          units: bps
+          tags:
+            - tag: Internet
+              value: Use
+        - uuid: 802486af307346ac86d8d59a33b67054
+          name: speedtest_upload
+          type: EXTERNAL
+          key: 'speedtest-cli.sh["download"]'
+          delay: 30m
+          history: 30d
+          value_type: FLOAT
+          units: Mbps
+          description: |
+            O script pede por --no-download para fazer apenas o upload
+            O numero é o código do servidor que se consegue com a opção --list
+          tags:
+            - tag: Internet
+              value: Capacity
+          triggers:
+            - uuid: e8be995ac7424bc5aa4543e4421a8c20
+              expression: 'nodata(/Template Telnet D-LINK Bandwidth/speedtest-cli.sh["download"],32m)=1'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'nodata(/Template Telnet D-LINK Bandwidth/speedtest-cli.sh["download"],32m)=0'
+              name: 'Sem dados Upload'
+              priority: INFO
+              manual_close: 'YES'
+        - uuid: f523fa56147c496796c7ac402a70fe7f
+          name: speedtest_download
+          type: EXTERNAL
+          key: 'speedtest-cli.sh["upload"]'
+          delay: 30m
+          history: 30d
+          value_type: FLOAT
+          units: Mbps
+          description: |
+            Obs: O script pede por --no-upload para fazer o apenas o download
+            O numero é o código do servidor que se consegue com a opção --list
+          tags:
+            - tag: Internet
+              value: Capacity
+          triggers:
+            - uuid: 2125a21e98e24d2a947de17c0070a4bc
+              expression: 'nodata(/Template Telnet D-LINK Bandwidth/speedtest-cli.sh["upload"],32m)=1'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'nodata(/Template Telnet D-LINK Bandwidth/speedtest-cli.sh["upload"],32m)=0'
+              name: 'Sem dados Download'
+              priority: INFO
+              manual_close: 'YES'
+  graphs:
+    - uuid: a0e2e6b1329c4de08a6834ad7c34ee72
+      name: 'Bandwidth Use'
+      graph_items:
+        - color: 1A7C11
+          calc_fnc: ALL
+          item:
+            host: 'Template Telnet D-LINK Bandwidth'
+            key: 'bandwidth.sh["{HOST.CONN}","{$USER}","{$PASSWORD}", "10","0"]'
+        - sortorder: '1'
+          color: FF0000
+          calc_fnc: ALL
+          item:
+            host: 'Template Telnet D-LINK Bandwidth'
+            key: 'bandwidth.sh["{HOST.CONN}","{$USER}","{$PASSWORD}", "10","1"]'
+    - uuid: 9d3714bd77034986a5a5064f4c3303e4
+      name: 'Bandwidth Use - Download'
+      graph_items:
+        - color: 1A7C11
+          calc_fnc: ALL
+          item:
+            host: 'Template Telnet D-LINK Bandwidth'
+            key: 'bandwidth.sh["{HOST.CONN}","{$USER}","{$PASSWORD}", "10","0"]'
+    - uuid: 0390e2e6641e4392972c8a8049dcfc6a
+      name: 'Bandwidth Use - Upload'
+      graph_items:
+        - color: F44336
+          calc_fnc: ALL
+          item:
+            host: 'Template Telnet D-LINK Bandwidth'
+            key: 'bandwidth.sh["{HOST.CONN}","{$USER}","{$PASSWORD}", "10","1"]'
+    - uuid: d36d4ceb0903421b919d89b93be6851c
+      name: 'Speed Test'
+      graph_items:
+        - color: 1A7C11
+          calc_fnc: ALL
+          item:
+            host: 'Template Telnet D-LINK Bandwidth'
+            key: 'speedtest-cli.sh["upload"]'
+        - sortorder: '1'
+          color: FF0000
+          calc_fnc: ALL
+          item:
+            host: 'Template Telnet D-LINK Bandwidth'
+            key: 'speedtest-cli.sh["download"]'
